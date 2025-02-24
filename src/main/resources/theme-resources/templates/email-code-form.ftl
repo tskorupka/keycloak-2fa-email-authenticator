@@ -11,18 +11,18 @@
                     <label for="emailCode" class="${properties.kcLabelClass!}">${msg("emailOtpForm")}</label>
                 </div>
 
-            <div class="${properties.kcInputWrapperClass!}">
-                <input id="emailCode" name="emailCode" autocomplete="off" type="text" class="${properties.kcInputClass!}"
-                       autofocus aria-invalid="<#if messagesPerField.existsError('emailCode')>true</#if>"/>
+                <div class="${properties.kcInputWrapperClass!}">
+                    <input id="emailCode" name="emailCode" autocomplete="off" type="text" class="${properties.kcInputClass!}"
+                        autofocus aria-invalid="<#if messagesPerField.existsError('emailCode')>true</#if>"/>
 
-                <#if messagesPerField.existsError('emailCode')>
-                    <span id="input-error-otp-code" class="${properties.kcInputErrorMessageClass!}"
-                          aria-live="polite">
-                        ${kcSanitize(messagesPerField.get('emailCode'))?no_esc}
-                    </span>
-                </#if>
+                    <#if messagesPerField.existsError('emailCode')>
+                        <span id="input-error-otp-code" class="${properties.kcInputErrorMessageClass!}"
+                            aria-live="polite">
+                            ${kcSanitize(messagesPerField.get('emailCode'))?no_esc}
+                        </span>
+                    </#if>
+                </div>
             </div>
-        </div>
 
             <div class="${properties.kcFormGroupClass!}">
                 <div id="kc-form-options" class="${properties.kcFormOptionsClass!}">
