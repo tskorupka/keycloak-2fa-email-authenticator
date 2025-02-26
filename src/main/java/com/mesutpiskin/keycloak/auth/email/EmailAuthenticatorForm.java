@@ -166,7 +166,7 @@ public class EmailAuthenticatorForm extends AbstractUsernameFormAuthenticator {
             Map<String, Object> mailBodyAttributes = new HashMap<>();
             mailBodyAttributes.put("username", user.getUsername());
             mailBodyAttributes.put("code", code);
-            mailBodyAttributes.put("ttl", ttl);
+            mailBodyAttributes.put("ttl", String.valueOf(ttl / 60));
 
             try {
                 mailBodyAttributes.put("linkExpirationFormatter", new LinkExpirationFormatterMethod(theme.getMessages(locale), locale));
