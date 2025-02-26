@@ -17,13 +17,18 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.FormMessage;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.theme.Theme;
+import org.keycloak.theme.beans.LinkExpirationFormatterMethod;
 import org.keycloak.authentication.authenticators.browser.AbstractUsernameFormAuthenticator;
 import org.keycloak.common.util.SecretGenerator;
 
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @JBossLog
@@ -154,14 +159,24 @@ public class EmailAuthenticatorForm extends AbstractUsernameFormAuthenticator {
             throw new AuthenticationFlowException(AuthenticationFlowError.INVALID_USER);
         }
 
-        Map<String, Object> mailBodyAttributes = new HashMap<>();
-        mailBodyAttributes.put("username", user.getUsername());
-        mailBodyAttributes.put("code", code);
-        mailBodyAttributes.put("ttl", ttl);
-
-        String realmName = realm.getDisplayName() != null ? realm.getDisplayName() : realm.getName();
-        List<Object> subjectParams = List.of(realmName);
         try {
+            Theme theme = getTheme(session);
+            Locale locale = session.getContext().resolveLocale(user, theme.getType());
+
+            Map<String, Object> mailBodyAttributes = new HashMap<>();
+            mailBodyAttributes.put("username", user.getUsername());
+            mailBodyAttributes.put("code", code);
+            mailBodyAttributes.put("ttl", ttl);
+
+            try {
+                mailBodyAttributes.put("linkExpirationFormatter", new LinkExpirationFormatterMethod(theme.getMessages(locale), locale));
+            } catch (IOException e) {
+                throw new EmailException("Unable to send email, theme messages not found for email");
+            }
+
+            String realmName = realm.getDisplayName() != null ? realm.getDisplayName() : realm.getName();
+            List<Object> subjectParams = List.of(realmName);
+
             EmailTemplateProvider emailProvider = session.getProvider(EmailTemplateProvider.class);
             emailProvider.setRealm(realm);
             emailProvider.setUser(user);
@@ -169,6 +184,14 @@ public class EmailAuthenticatorForm extends AbstractUsernameFormAuthenticator {
             emailProvider.send("emailCodeSubject", subjectParams, "email-code.ftl", mailBodyAttributes);
         } catch (EmailException eex) {
             log.errorf(eex, "Failed to send access code email. realm=%s user=%s", realm.getId(), user.getUsername());
+        }
+    }
+
+    protected Theme getTheme(KeycloakSession session) throws EmailException {
+        try {
+            return session.theme().getTheme(Theme.Type.EMAIL);
+        } catch (IOException e) {
+            throw new EmailException("Unable to send email, theme not found for email");
         }
     }
 }
